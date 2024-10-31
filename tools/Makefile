@@ -1,4 +1,4 @@
-all: fdfs fdfs.exe png2fofd colMO2TO colMO2TO.exe snd6bit exoraw lwasm
+all: fdfs fdfs.exe k7mofs k7mofs.exe png2fofd colMO2TO colMO2TO.exe snd6bit exoraw lwasm
 
 .PHONY: lwasm exoraw
 
@@ -7,6 +7,12 @@ fdfs: fdfs.c
 
 fdfs.exe: fdfs.c
 	i686-w64-mingw32-gcc -o $@ fdfs.c
+
+k7mofs: k7mofs.c
+	gcc -o $@ $@.c
+
+k7mofs.exe: k7mofs.c
+	i686-w64-mingw32-gcc -o $@ k7mofs.c
 
 png2fofd: png2fofd.c upng.c upng.h
 	gcc -o $@ $@.c upng.c

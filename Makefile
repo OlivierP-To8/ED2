@@ -1,9 +1,9 @@
-all: tools ED2.fd
+all: tools ED2.fd ED2.m5 ED2.k5
 
-.PHONY: tools ED2MO.fd ED2TO.fd
+.PHONY: tools ED2MO.fd ED2TO.fd ED2.m5
 
 clean:
-	-rm *.fd
+	-rm *.fd *.m5
 	make -C tools clean
 	make -C src clean
 	make -C srcTO clean
@@ -19,6 +19,14 @@ ED2TO.fd:
 
 ED2.fd: ED2TO.fd ED2MO.fd
 	cat srcTO/ED2TO.fd src/ED2MO.fd > $@
+
+ED2.m5:
+	make -C srcM5 $@
+	cat srcM5/$@ > $@
+
+ED2.k5:
+	make -C srcM5 $@
+	cat srcM5/$@ > $@
 
 source:
 	-rm ED2src.zip
