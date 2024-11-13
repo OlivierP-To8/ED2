@@ -283,6 +283,7 @@ void addFileContent(char *filename, byte *bytes, int size)
 				{
 					floppyDisk[entry+30]++; // number of 16K banks
 				}
+				printf("\t%d banques de 16K\n", floppyDisk[entry+30]);
 				byte checksum = 0;
 				for (int i=0; i<8; i++)
 				{
@@ -483,6 +484,62 @@ void addED2Pack(char *initfile, char *packfile)
 	}
 }
 
+void addContBloc(char *file)
+{
+	// Ajout d'un fichier en bloc continu.
+	// Le contenu du fichier est ajouté, avec les blocs réservés (piste 20 secteur 2)
+	// pour éviter qu’il soit écrasé par d’autres fichiers, mais
+	// il n'est pas ajouté dans le catalogue (piste 20 secteurs 3 à 16).
+
+	printf("addContBloc %s\n", file);
+	FILE *f = fopen(file, "rb");
+	{
+		fseek(f, 0, SEEK_END);
+		int filesize = ftell(f);
+		fseek(f, 0, SEEK_SET);
+
+		byte *bytes = malloc(filesize);
+		memset(bytes, 0, filesize);
+
+		int nb = fread(bytes, 1, filesize, f);
+		printf("\tlecture de %s (%d octets) %s\n", file, filesize, filesize == nb?"OK":"KO");
+		fclose(f);
+
+		byte blocks[112];
+		int blocksnb = 0;
+		int offset = filesize-blockSize;
+		int sizeLeft = filesize;
+		memset(blocks, 0, sizeof(blocks));
+		while (sizeLeft > 0)
+		{
+			byte block = findFreeBlock(blocks, blocksnb);
+			addFileBlock(block, bytes, filesize, offset, sectorSize);
+			if (blocksnb > 0)
+			{
+				floppyDisk[FAT+blocks[blocksnb-1]] = reservedBlock;
+			}
+			blocks[blocksnb++] = block;
+			int nbs = 8;
+			if (sizeLeft <= blockSize)
+			{
+				byte nbSectors = 0;
+				while (sizeLeft > 0)
+				{
+					nbSectors++;
+					sizeLeft -= sectorSize;
+				}
+				floppyDisk[FAT+blocks[blocksnb-1]] = reservedBlock;
+				nbs = nbSectors;
+			}
+			byte track = (block >> 1);
+			byte sector = (block & 0x01) ? 9 : 1;
+			printf("\tajout bloc 2K offset %04x : piste %02d secteur %02d-%02d\n", offset, track, sector, sector + nbs - 1);
+			offset -= blockSize;
+			sizeLeft -= blockSize;
+		}
+	}
+}
+
 void extFile(char *filename, FILE *f)
 {
 	char basename[13];
@@ -641,6 +698,49 @@ void addFile(char *filename)
 	}
 }
 
+void addAutoBat(char *binName)
+{
+	int loadlen = 2 + 2 + 2 + strlen(binName) + 2 + 3 + 1; // len + 10 + LOADM + binName + "" + ,,R + 0x00
+	int fulllen = 1 + loadlen + 2;
+
+	byte *fileData = malloc(fulllen);
+	memset(fileData, 0, fulllen);
+	int i = 0;
+
+	// entête
+	fileData[i++]=0xff;
+	// taille du fichier
+	fileData[i++]=(byte)(fulllen >> 8);
+	fileData[i++]=(byte)(fulllen & 0xff);
+	// *** première ligne ***
+	// longueur de la ligne
+	fileData[i++]=(byte)(loadlen >> 8);
+	fileData[i++]=(byte)(loadlen & 0xff);
+	// numéro de ligne
+	fileData[i++]=0x00;
+	fileData[i++]=0x0a; // 10
+	// LOADM
+	fileData[i++]=0xb3; // LOAD
+	fileData[i++]=0x4d; // M
+	// binName
+	fileData[i++]=0x22; // "
+	for (int j=0; j<strlen(binName); j++)
+	{
+		fileData[i++]=(byte)(binName[j]);
+	}
+	fileData[i++]=0x22; // "
+	fileData[i++]=0x2c; // ,
+	fileData[i++]=0x2c; // ,
+	fileData[i++]=0x52; // R
+	// fin de ligne
+	fileData[i++]=0x00;
+	// fin de fichier
+	fileData[i++]=0x00;
+	fileData[i++]=0x00;
+
+	addFileContent("AUTO.BAT", fileData, i);
+}
+
 int main(int argc, char **argv)
 {
 	printf("FDFS pour Evil Dungeons 2 par OlivierP-To8\n");
@@ -776,6 +876,32 @@ int main(int argc, char **argv)
 				}
 			}
 			addBootLoader(argv[3], nbBin); // bootloader avec boot sur les 3 premiers fichiers (entry 0, 1 et 2)
+			fwrite(floppyDisk, 1, diskSize, fd);
+			fclose(fd);
+		}
+	}
+	else if ((argc >= 4) && (strcmp(argv[1], "-M7") == 0))
+	{
+		FILE *fd = fopen(argv[2], "wb");
+		if (fd == NULL)
+		{
+			printf("impossible d'ouvrir %s\n", argv[2]);
+			exit(1);
+		}
+		else
+		{
+			for (int i=3; i<argc; i++)
+			{
+				if (strstr(argv[i], ".BIN") != NULL)
+				{
+					addFile(argv[i]);
+					addAutoBat(argv[i]);
+				}
+				else
+				{
+					addContBloc(argv[i]);
+				}
+			}
 			fwrite(floppyDisk, 1, diskSize, fd);
 			fclose(fd);
 		}

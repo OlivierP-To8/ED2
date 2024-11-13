@@ -68,3 +68,36 @@ cd ..\srcTO
 cd ..
 copy /B srcTO\ED2TO.fd + src\ED2MO.fd ED2.fd
 pause
+cd srcM7
+..\tools\lwasm.exe --6809 -lINTRO.txt -f raw -o INTRO.BIN INTRO.asm
+..\tools\exoraw.exe -b INTRO.BIN -o INTRO.BIN.exo2
+..\tools\lwasm.exe --6809 -lED2.txt -f raw -o ED2.BIN ED2.asm -DINIT=1 -DPACKE=1 -DPACKM=1
+..\tools\dd.exe if=ED2.BIN of=INIT1.DAT bs=256 count=1
+..\tools\dd.exe if=ED2.BIN of=PACK1.DAT bs=256 count=25 skip=97
+..\tools\exoraw.exe -b PACK1.DAT -o PACK1.DAT.exo2
+..\tools\lwasm.exe --6809 -lED2P2.txt -f raw -o ED2P2.BIN ED2.asm -DINIT=2 -DPACKE=2 -DPACKM=2
+..\tools\dd.exe if=ED2P2.BIN of=INIT2.DAT bs=256 count=1
+..\tools\dd.exe if=ED2P2.BIN of=PACK2.DAT bs=256 count=25 skip=97
+..\tools\exoraw.exe -b PACK2.DAT -o PACK2.DAT.exo2
+..\tools\lwasm.exe --6809 -lED2P3.txt -f raw -o ED2P3.BIN ED2.asm -DINIT=3 -DPACKE=3 -DPACKM=3
+..\tools\dd.exe if=ED2P3.BIN of=INIT3.DAT bs=256 count=1
+..\tools\dd.exe if=ED2P3.BIN of=PACK3.DAT bs=256 count=25 skip=97
+..\tools\exoraw.exe -b PACK3.DAT -o PACK3.DAT.exo2
+..\tools\dd.exe if=ED2.BIN of=ED2Part.DAT bs=256 skip=1 count=96
+..\tools\exoraw.exe -b ED2Part.DAT -o ED2Part.DAT.exo2
+..\tools\lwasm.exe --6809 -lED2ROM0.txt -f raw -o ED2ROM0.BIN ED2ROM0.asm -DMEGAROM=0
+..\tools\lwasm.exe --6809 -lED2ROM1.txt -f raw -o ED2ROM1.BIN ED2ROM1.asm
+..\tools\lwasm.exe --6809 -lED2ROM2.txt -f raw -o ED2ROM2.BIN ED2ROM2.asm
+..\tools\lwasm.exe --6809 -lED2ROM3.txt -f raw -o ED2ROM3.BIN ED2ROM3.asm
+copy /B ED2ROM0.BIN + ED2ROM1.BIN + ED2ROM2.BIN + ED2ROM3.BIN ..\ED2.m7
+pause
+..\tools\lwasm.exe --6809 -lED2ROM0MR.txt -f raw -o ED2ROM0MR.BIN ED2ROM0.asm -DMEGAROM=1
+copy /B ED2ROM0MR.BIN + ED2ROM1.BIN + ED2ROM2.BIN + ED2ROM3.BIN ED2MRT2.m7
+..\tools\lwasm.exe --6809 -lED2MegaromT2.txt -f decb -o ED2MRT2.BIN ED2MegaromT2.asm
+..\tools\fdfs.exe -M7 ED2MegaromT2.fd ED2MRT2.m7 ED2MRT2.BIN
+..\tools\dd.exe if=ED2MegaromT2.fd of=reserved.DAT bs=1 count=32 skip=82225
+..\tools\dd.exe if=reserved.DAT of=ED2MegaromT2.fd bs=1 count=32 seek=82179 conv=notrunc
+..\tools\dd.exe if=ED2MegaromT2.fd of=test.m7 bs=4096 skip=24 count=16
+fc /B ED2MRT2.m7 test.m7
+cd ..
+pause
