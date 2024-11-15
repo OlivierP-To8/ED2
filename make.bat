@@ -67,6 +67,8 @@ cd ..\srcTO
 ..\tools\fdfs.exe -ED2 ED2TO.fd BOOTMOTO.BIN INTRO.BIN@6600@6752 INIT.BIN@A000@A156 ED2.BIN@6600 INIT1.DAT PACK1.DAT INIT2.DAT PACK2.DAT INIT3.DAT PACK3.DAT INIT4.DAT OUTRO.DAT
 cd ..
 copy /B srcTO\ED2TO.fd + src\ED2MO.fd ED2.fd
+tools\fdtosd.exe -conv ED2.fd ED2.sd
+tools\fdtohfe -conv ED2.fd ED2.hfe 2
 pause
 cd srcM7
 ..\tools\lwasm.exe --6809 -lINTRO.txt -f raw -o INTRO.BIN INTRO.asm
@@ -99,5 +101,8 @@ copy /B ED2ROM0MR.BIN + ED2ROM1.BIN + ED2ROM2.BIN + ED2ROM3.BIN ED2MRT2.m7
 ..\tools\dd.exe if=reserved.DAT of=ED2MegaromT2.fd bs=1 count=32 seek=82179 conv=notrunc
 ..\tools\dd.exe if=ED2MegaromT2.fd of=test.m7 bs=4096 skip=24 count=16
 fc /B ED2MRT2.m7 test.m7
+move /Y ED2MegaromT2.fd ..
 cd ..
+tools\fdtosd.exe -conv ED2MegaromT2.fd ED2MegaromT2.sd
+tools\fdtohfe -conv ED2MegaromT2.fd ED2MegaromT2.hfe 2
 pause

@@ -3,7 +3,7 @@ all: tools ED2.fd ED2.m5 ED2.k5 ED2.m7 ED2MegaromT2.fd
 .PHONY: tools ED2MO.fd ED2TO.fd ED2.m5 ED2.k5 ED2.m7 ED2MegaromT2.fd
 
 clean:
-	-rm *.fd *.m5
+	-rm *.fd *.sd *.hfe *.m5 *.k5 *.m7
 	make -C tools clean
 	make -C src clean
 	make -C srcTO clean
@@ -21,6 +21,8 @@ ED2TO.fd:
 
 ED2.fd: ED2TO.fd ED2MO.fd
 	cat srcTO/ED2TO.fd src/ED2MO.fd > $@
+	tools/fdtosd -conv $@ ED2.sd
+	tools/fdtohfe -conv $@ ED2.hfe 2
 
 ED2.m5: ED2MO.fd
 	make -C srcM5 $@
@@ -37,6 +39,8 @@ ED2.m7: ED2TO.fd
 ED2MegaromT2.fd: ED2.m7
 	make -C srcM7 $@
 	cat srcM7/$@ > $@
+	tools/fdtosd -conv $@ ED2MegaromT2.sd
+	tools/fdtohfe -conv $@ ED2MegaromT2.hfe 2
 
 source:
 	-rm ED2src.zip

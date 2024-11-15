@@ -1,4 +1,4 @@
-all: fdfs fdfs.exe k7mofs k7mofs.exe png2fofd colMO2TO colMO2TO.exe snd6bit exoraw lwasm
+all: fdfs fdfs.exe k7mofs k7mofs.exe fdtosd fdtosd.exe fdtohfe fdtohfe.exe png2fofd colMO2TO colMO2TO.exe snd6bit exoraw lwasm
 
 .PHONY: lwasm exoraw
 
@@ -13,6 +13,18 @@ k7mofs: k7mofs.c
 
 k7mofs.exe: k7mofs.c
 	i686-w64-mingw32-gcc -o $@ k7mofs.c
+
+fdtosd: fdtosd.c
+	gcc -o $@ $@.c
+
+fdtosd.exe: fdtosd.c
+	i686-w64-mingw32-gcc -o $@ fdtosd.c
+
+fdtohfe: fdtohfe.c
+	gcc -o $@ $@.c
+
+fdtohfe.exe: fdtohfe.c
+	i686-w64-mingw32-gcc -o $@ fdtohfe.c
 
 png2fofd: png2fofd.c upng.c upng.h
 	gcc -o $@ $@.c upng.c
@@ -35,7 +47,7 @@ lwasm:
 	cp -p lwtools-4.22/lwasm/lwasm .
 
 clean:
-	-rm fdfs png2fofd colMO2TO snd6bit exoraw lwasm
+	-rm fdfs k7mofs fdtosd fdtohfe png2fofd colMO2TO snd6bit exoraw lwasm
 	make -C exomizer2 clean
 	make -C lwtools-4.22 clean
 

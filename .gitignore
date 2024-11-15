@@ -8,6 +8,8 @@ tools/k7mofs
 *.BIN
 *.DAT
 *.fd
+*.sd
+*.hfe
 *.m5
 *.k5
 *.m7
